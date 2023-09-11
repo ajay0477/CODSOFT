@@ -1,115 +1,104 @@
-import { View, Text, Image, StyleSheet, SafeAreaView, Pressable } from 'react-native'
-import React, { useEffect } from 'react'
-import PushNotification from 'react-native-push-notification'
-import ListAlarms from './components/ListAlarms'
-import TimePicker from './components/TimePicker'
+import { useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, TouchableHighlight, TouchableOpacity, View } from 'react-native';
+import Nav from './components/nav.js';
+import Daily from './components/daily.js';
+import Saved from './components/saved.js';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
 
+export default function App() {
+  const currentDate = new Date();
+  const year = currentDate.getFullYear(); // e.g., 2023
+  const month = currentDate.getMonth() + 1; // Note: Months are zero-indexed, so you need to add 1
+  const day = currentDate.getDate(); // e.g., 8
+  const id=`${day}${month}${year}`;
 
-const App = () => {
+  const [openDaily,setDaily]=useState(true)
+  const [openSaved,setSaved]=useState(false)
+  const [colDaily,setColDaily]=useState('white')
+  const [colSaved,setColSaved]=useState('#7209b7')
 
-    useEffect(() => {
-        createChannels();
-    }, []);
-
-    const createChannels = () => {
-        PushNotification.createChannel({
-            channelId: "test-channel",
-            channelName: "Test Channel",
-            channelDescription: "A channel to categorise your notifications",
-        });
-    };
+  const openDailyfun=()=>{
+    setDaily(true);
+    setSaved(false);
+    setColDaily('white');
+    setColSaved('#7209b7');
+  }
+  const openSavedfun=()=>{
+    setDaily(false);
+    setSaved(true);
+    setColDaily('#7209b7');
+    setColSaved('white');
     
-
-
-    const handleNotification = () => {
-
-        PushNotification.cancelAllLocalNotifications();
-
-        
-        PushNotification.localNotificationSchedule({
-            channelId: "test-channel",
-            title: "Alarm Ringing",
-
-            message: "Message Here",
-            actions: ["Accept", "Reject"],
-            date: new Date(Date.now() + 100),
-            allowWhileIdle: true,
-            invokeApp: false,
-
-            //repeatTime: 2,
-        });
-    
-        PushNotification.configure({
-            onAction: function (notification) {
-                if (notification.action === 'Accept') {
-                    console.log('Alarm Snoozed');
-                }
-                else if (notification.action === 'Reject') {
-                    console.log('Alarm Stoped');
-                    //PushNotification.cancelAllLocalNotifications();
-                }
-                else {
-                    console.log('Notification opened');
-                }
-            },
-            actions: ["Accept", "Reject"],
-        });
-    }
-
-    return (
-        <View style={styles.mainContainer}>
-            <Text style={styles.heading}>ALARM</Text>
-            <Pressable
-                style={styles.buttonStyle}
-                onPress={() => {
-                    handleNotification(),
-                        console.log("Schedule Notification")
-                }}>
-                <Image
-                    source={require("./sourcefile/imgs/alarm-clock.png")}
-                    style={{ height: 60, width: 60 }}
-                />
-            </Pressable>
-
-            <SafeAreaView style={styles.listAlarms}>
-                <ListAlarms />
-            </SafeAreaView>
-            <View style={styles.timePicker}>
-                <TimePicker />
-            </View>
+  }
+  
+  return (
+    <View style={styles.container}>
+      
+          <View style={{flex:1,height:'10%',width:'100%',borderRadius:20,alignItems:"center",justifyContent:'space-evenly',flexDirection:'row'}}>
+        <TouchableOpacity style={[styles.tch,{backgroundColor:colDaily}]} onPress={openDailyfun}>
+            <Text style={[styles.tst]}>
+                Daily
+            </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tch,{backgroundColor:colSaved}]} onPress={openSavedfun}>
+        <Text style={[styles.tst]}>
+              Favorite
+            </Text>
+        </TouchableOpacity>
         </View>
-    );
+
+        <View style={styles.box}>
+
+        {openDaily ? <Daily/> : <Saved/>}
+
+      </View>
+      <View style={{height:"5%"}}>
+
+      </View>
+
+      <StatusBar style="auto" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  // '#f72585',pink
+  // '#7209b7',violet
+  // '#3a0ca3',blue
+  // '#4361ee',light blue
+  container: {
+    flex:1,
+    backgroundColor: '#7209b7',//violet
+    alignItems: 'center',
+    justifyContent:"center",
+  },
+  box:{
+    width:'85%',
+    height:"70%",
+    backgroundColor:"#edf7f6",
+    padding:20,
+    borderRadius:20,
+    justifyContent:'center'
+  },
+  tch:{
+    backgroundColor:'red',
+    justifyContent:'center',
+    width:'40%',
+    height:'30%',
+    borderRadius:20,
+    borderWidth:2,
+    borderBlockColor:'white',
+    borderColor:'white'
+},
+tst:{
+    justifyContent:'center',
+    textAlign:'center',
+    fontSize:20
+
 }
 
 
-
-const styles = StyleSheet.create({
-    mainContainer: {
-        flex: 1,
-        alignItems: 'center'
-    },
-    heading: {
-        fontSize: 25,
-        padding: 20,
-        color: 'black'
-    },
-    timePicker: {
-        paddingTop: "10%",
-        width: "50%",
-        bottom: 20,
-    },
-    listAlarms: {
-        flex: 1,
-        width: "100%",
-    },
-
-    buttonStyle: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 25,
-    },
-
-})
-
-export default App;
+});
